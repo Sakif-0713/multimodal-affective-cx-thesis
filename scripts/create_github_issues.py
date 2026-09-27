@@ -113,18 +113,34 @@ Build executive BI decision support triage dashboard in `/frontend/app/dashboard
     }
 ]
 
+import shutil
+
+GH_EXE = shutil.which("gh") or r"C:\Program Files\GitHub CLI\gh.exe"
+
 def check_gh_cli():
     try:
-        res = subprocess.run(["gh", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        res = subprocess.run([GH_EXE, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         return res.returncode == 0
     except Exception:
         return False
 
 def create_with_gh_cli():
-    print("Using GitHub CLI to create issues...")
+    print(f"Using GitHub CLI ({GH_EXE}) to create issues on live repository...")
+    
+    # 1. Ensure all custom labels exist in repository
+    all_labels = set()
+    for item in ISSUES:
+        for lbl in item["labels"]:
+            all_labels.add(lbl)
+
+    print(f"Ensuring {len(all_labels)} GitHub labels exist...")
+    for lbl in all_labels:
+        subprocess.run([GH_EXE, "label", "create", lbl, "--color", "6366f1", "--force"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # 2. Create the issues
     for item in ISSUES:
         cmd = [
-            "gh", "issue", "create",
+            GH_EXE, "issue", "create",
             "--title", item["title"],
             "--body", item["body"]
         ]
