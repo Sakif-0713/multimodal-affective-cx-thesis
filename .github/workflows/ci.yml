@@ -1,0 +1,59 @@
+name: Multimodal Affective Computing Monorepo CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend-lint-and-test:
+    name: Python FastAPI Backend CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/python-versions@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python Dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Python Syntax Check
+        run: |
+          python -m py_compile backend/main.py
+          python -m py_compile backend/models/text_pipeline.py
+          python -m py_compile backend/models/audio_pipeline.py
+          python -m py_compile backend/models/video_pipeline.py
+          python -m py_compile backend/models/late_fusion.py
+          python -m py_compile backend/utils/aspect_extractor.py
+
+  frontend-build:
+    name: Next.js Frontend CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Next.js Build Test
+        run: |
+          cd frontend
+          npm run build
