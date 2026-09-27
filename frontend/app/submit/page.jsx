@@ -32,6 +32,28 @@ export default function SubmitPage() {
   const videoMediaRecorderRef = useRef(null);
   const videoChunksRef = useRef([]);
 
+  // Research Consent Gate states
+  const [hasConsented, setHasConsented] = useState(false);
+  const [consentChecks, setConsentChecks] = useState({
+    item1: true,
+    item2: true,
+    item3: true,
+    item4: true,
+    item5: true,
+  });
+
+  useEffect(() => {
+    const savedConsent = localStorage.getItem('thesis_research_consent');
+    if (savedConsent === 'true') {
+      setHasConsented(true);
+    }
+  }, []);
+
+  const handleGrantConsent = () => {
+    localStorage.setItem('thesis_research_consent', 'true');
+    setHasConsented(true);
+  };
+
   // Submission & Result states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [triageResult, setTriageResult] = useState(null);
@@ -555,8 +577,6 @@ export default function SubmitPage() {
                 );
               })}
             </div>
-          </div>
-
           {/* MABSA Extracted Touchpoints */}
           {triageResult.aspect_touchpoints && triageResult.aspect_touchpoints.length > 0 && (
             <div className="space-y-3 pt-2">
@@ -576,6 +596,67 @@ export default function SubmitPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Institutional Research Consent Modal Overlay */}
+      {!hasConsented && (
+        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="glass-panel-glow max-w-2xl w-full p-6 sm:p-8 rounded-2xl border border-indigo-500/50 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="space-y-2 border-b border-slate-800 pb-4">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-950 text-indigo-300 text-xs font-medium border border-indigo-800">
+                <span>📋 Research Governance & Ethics Protocol</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
+                Institutional Research Consent Form
+              </h2>
+              <p className="text-xs text-slate-400">
+                An Empirical Investigation into Multimodal Affective Computing for Enterprise Customer Experience (CX) Decision Support Systems
+              </p>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-300">
+              <p className="font-semibold text-indigo-300 uppercase tracking-wider">Statement of Informed Consent:</p>
+              
+              <div className="space-y-2 font-sans">
+                <label className="flex items-start space-x-3 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                  <input type="checkbox" checked={consentChecks.item1} onChange={(e) => setConsentChecks({...consentChecks, item1: e.target.checked})} className="mt-0.5 accent-indigo-500" />
+                  <span>1. I confirm that I have had the research project and procedures fully explained to me in written form by the researcher.</span>
+                </label>
+
+                <label className="flex items-start space-x-3 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                  <input type="checkbox" checked={consentChecks.item2} onChange={(e) => setConsentChecks({...consentChecks, item2: e.target.checked})} className="mt-0.5 accent-indigo-500" />
+                  <span>2. I understand that the study involves evaluating an experimental multimodal review system encompassing text, audio, and video inputs.</span>
+                </label>
+
+                <label className="flex items-start space-x-3 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                  <input type="checkbox" checked={consentChecks.item3} onChange={(e) => setConsentChecks({...consentChecks, item3: e.target.checked})} className="mt-0.5 accent-indigo-500" />
+                  <span>3. I understand that I may withdraw from participation in this study at any time without requirement of explanation.</span>
+                </label>
+
+                <label className="flex items-start space-x-3 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                  <input type="checkbox" checked={consentChecks.item4} onChange={(e) => setConsentChecks({...consentChecks, item4: e.target.checked})} className="mt-0.5 accent-indigo-500" />
+                  <span>4. I understand that all gathered data will be treated with strict confidentiality, fully anonymized with automated UUIDs, and utilized exclusively for research purposes.</span>
+                </label>
+
+                <label className="flex items-start space-x-3 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 hover:border-slate-700 cursor-pointer">
+                  <input type="checkbox" checked={consentChecks.item5} onChange={(e) => setConsentChecks({...consentChecks, item5: e.target.checked})} className="mt-0.5 accent-indigo-500" />
+                  <span>5. I voluntarily grant my informed consent to participate in this research study.</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-800 flex justify-end">
+              <button
+                type="button"
+                onClick={handleGrantConsent}
+                disabled={!Object.values(consentChecks).every(Boolean)}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-40"
+              >
+                I Consent & Unlock Review Portal
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

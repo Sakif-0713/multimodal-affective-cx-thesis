@@ -1,0 +1,31 @@
+{
+  "sample_size_n": 30,
+  "cohort_a_size": 15,
+  "cohort_b_size": 15,
+  "tam_metrics": {
+    "perceived_usefulness_pu": {
+      "mean": 4.57,
+      "sd": 0.35
+    },
+    "perceived_ease_of_use_peou": {
+      "mean": 4.57,
+      "sd": 0.31
+    },
+    "intention_to_adopt_ita": {
+      "mean": 4.42,
+      "sd": 0.35
+    }
+  },
+  "latency_reduction": {
+    "avg_legacy_triage_minutes": 15.24,
+    "avg_multimodal_triage_minutes": 1.82,
+    "latency_reduction_percentage": 88.06
+  },
+  "hypothesis_testing": {
+    "test_type": "Paired Samples t-Test",
+    "degrees_of_freedom": 29,
+    "t_statistic": 26.9443,
+    "p_value": 0.001,
+    "null_hypothesis_rejected": true
+  }
+}

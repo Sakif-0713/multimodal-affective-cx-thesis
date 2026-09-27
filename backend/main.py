@@ -21,6 +21,7 @@ from models.audio_pipeline import process_audio_file
 from models.video_pipeline import process_video_file
 from models.late_fusion import compute_late_fusion
 from utils.aspect_extractor import extract_aspect_touchpoints
+from utils.supabase_client import save_triage_session, fetch_triage_history
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -78,8 +79,13 @@ def read_root():
 def health_check():
     return {"status": "healthy", "timestamp": time.time()}
 
+@app.get("/api/v1/sessions")
+def get_triage_sessions(limit: int = 50):
+    return {"sessions": fetch_triage_history(limit=limit)}
+
 @app.post("/api/v1/triage", response_model=TriageResponse)
 async def triage_feedback(
+    background_tasks: BackgroundTasks,
     text: str = Form(default=""),
     w_text: float = Form(default=0.50),
     w_audio: float = Form(default=0.25),
@@ -139,26 +145,31 @@ async def triage_feedback(
 
     processing_time = round((time.time() - start_time) * 1000, 2)
 
-    return TriageResponse(
-        submission_id=submission_id,
-        timestamp=time.time(),
-        text_input=text,
-        modalities_processed=modalities_processed,
-        p_text=p_text,
-        p_audio=p_audio,
-        p_video=p_video,
-        audio_features=audio_features,
-        video_metadata=video_metadata,
-        fused_probabilities=fusion_result["fused_probabilities"],
-        dominant_emotion=fusion_result["dominant_emotion"],
-        confidence=fusion_result["confidence"],
-        csi_score=fusion_result["csi_score"],
-        acute_dissatisfaction_alert=fusion_result["acute_dissatisfaction_alert"],
-        anger_disappointment_score=fusion_result["anger_disappointment_score"],
-        weights_used=fusion_result["weights_used"],
-        aspect_touchpoints=aspect_touchpoints,
-        processing_time_ms=processing_time
-    )
+    response_payload = {
+        "submission_id": submission_id,
+        "timestamp": time.time(),
+        "text_input": text,
+        "modalities_processed": modalities_processed,
+        "p_text": p_text,
+        "p_audio": p_audio,
+        "p_video": p_video,
+        "audio_features": audio_features,
+        "video_metadata": video_metadata,
+        "fused_probabilities": fusion_result["fused_probabilities"],
+        "dominant_emotion": fusion_result["dominant_emotion"],
+        "confidence": fusion_result["confidence"],
+        "csi_score": fusion_result["csi_score"],
+        "acute_dissatisfaction_alert": fusion_result["acute_dissatisfaction_alert"],
+        "anger_disappointment_score": fusion_result["anger_disappointment_score"],
+        "weights_used": fusion_result["weights_used"],
+        "aspect_touchpoints": aspect_touchpoints,
+        "processing_time_ms": processing_time
+    }
+
+    # Queue async database save task
+    background_tasks.add_task(save_triage_session, response_payload)
+
+    return TriageResponse(**response_payload)
 
 if __name__ == "__main__":
     import uvicorn
